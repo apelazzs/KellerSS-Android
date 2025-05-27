@@ -418,22 +418,8 @@ escolheropcoes:
                         
                         
                 
-                        // Motivo 8 - Access do .json diferente dos tempos do .bin
-                        $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
-                        $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
-                        if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
-                            $jsonAccess = trim(preg_replace('/ -\d{4}$/', '', $matchJsonAccess[1]));
-                            $dataBinTimes = [$dataAccess, $dataModify, $dataChange];
-                            if (!in_array($jsonAccess, $dataBinTimes)) {
-                                $motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin" . basename($jsonPath);
-                            }
-                        }
-                        if (!$jsonStat) {
-                            $motivos[] = "Motivo 8 - Arquivo JSON ausente: " . basename($jsonPath);
-                        }
-
-                    }
-                }
+// Motivo 8 – Access do .json diferente dos tempos do .bin (incondicional)
+$motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin " . basename($arquivo);
                 
                 // Verificações na pasta MReplays
                 $resultadoPasta = shell_exec('adb shell "stat /sdcard/Android/data/com.dts.freefireth/files/MReplays 2>/dev/null"');
