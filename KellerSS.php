@@ -36,7 +36,7 @@ function keller_banner(){
 
 
 
-                    \e[36m{C} Coded By - KellerSS | Credits for Apela                                  
+                    \e[36m{C} Coded By - KellerSS | Credits for Apela                                   
 \e[32m
   \n";
 }
@@ -82,7 +82,7 @@ escolheropcoes:
     if (!in_array($opcaoscanner, array(
       '0',
       '1',
-      '2',        
+      '2',	
       'S',
   ), true))
     {
@@ -106,7 +106,7 @@ escolheropcoes:
             date_default_timezone_set('America/Sao_Paulo');
             shell_exec('adb start-server > /dev/null 2>&1');
 
-
+    
 
             $comandoDispositivos = shell_exec("adb devices 2>&1");
 
@@ -121,7 +121,7 @@ escolheropcoes:
                     echo $bold . $vermelho . "[!] Pareamento realizado de maneira incorreta, digite \"adb disconnect\" e refaça o processo.\n\n";
                     exit;
                 }
-
+                
                 if (!empty($comandoVerificarFF) && strpos($comandoVerificarFF, "com.dts.freefireth") !== false) {
                 } else {
                     echo $bold . $vermelho . "[!] O FreeFire está desinstalado, cancelando a telagem...\n\n";
@@ -147,18 +147,18 @@ escolheropcoes:
                     'magisk_ver'   => 'adb shell "su -c magisk --version" 2>/dev/null',
                     'adb_root'     => 'adb root 2>/dev/null',
                 ];
-
+                
                 $rootDetectado = false;
                 $erroAdb = false;
-
+                
                 foreach ($comandoVerificacoes as $nome => $comando) {
                     $resultado = shell_exec($comando);
-
+                
                     if ($nome === 'test_adb' && (empty($resultado) || strpos($resultado, 'ADB_OK') === false)) {
                         $erroAdb = true;
                         break;
                     }
-
+                
                     if (
                         !empty($resultado) &&
                         (
@@ -172,7 +172,7 @@ escolheropcoes:
                         break;
                     }
                 }
-
+                
                 if ($erroAdb) {
                     echo $bold . $vermelho . "[+] Ambiente Termux modificado, aplique o W.O.\n\n";
                 } elseif ($rootDetectado) {
@@ -180,7 +180,7 @@ escolheropcoes:
                 } else {
                     echo $bold . $fverde . "[-] O dispositivo não tem root.\n\n";
                 }
-
+                
 
 
             echo $bold . $azul . "[+] Checando se o dispositivo foi reiniciado recentemente...\n";
@@ -208,10 +208,10 @@ escolheropcoes:
                 } else {
                     echo $bold . $vermelho . "[!] Não foi possível capturar a data/hora do sistema.\n\n";
                 }
-
+            
             echo $bold . $azul . "[+] Verificando mudanças de data/hora...\n";
 
-
+                
             $logcatOutput = shell_exec('adb logcat -d | grep "UsageStatsService: Time changed" | grep -v "HCALL"');
 
             if ($logcatOutput !== null && trim($logcatOutput) !== "") {
@@ -309,7 +309,7 @@ escolheropcoes:
 
             if (!is_null($saida)) {
                 $linhas = explode("\n", trim($saida));
-
+                
                 foreach ($linhas as $linha) {
                     if (!empty($linha) && preg_match('/^([0-9]{2}-[0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}) (.+)$/', $linha, $matches)) {
                         $data = $matches[1];
@@ -332,20 +332,20 @@ escolheropcoes:
                 $comandoArquivos = 'adb shell "ls -t /sdcard/Android/data/com.dts.freefireth/files/MReplays/*.bin 2>/dev/null"';
                 $output = shell_exec($comandoArquivos) ?? '';
                 $arquivos = array_filter(explode("\n", trim($output)));
-
+                
                 $motivos = [];
                 $arquivoMaisRecente = null;
                 $ultimoModifyTime = null;
                 $ultimoChangeTime = null;
-
+                
                 // Motivo 10 - Nenhum replay encontrado
                 if (empty($arquivos)) {
                     $motivos[] = "Motivo 10 - Nenhum arquivo .bin encontrado na pasta MReplays";
                 }
-
+                
                 foreach ($arquivos as $indice => $arquivo) {
                     $resultadoStat = shell_exec('adb shell "stat ' . escapeshellarg($arquivo) . '"');
-
+                
                     if (
                         preg_match('/Access: (.*?)\n/', $resultadoStat, $matchAccess) &&
                         preg_match('/Modify: (.*?)\n/', $resultadoStat, $matchModify) &&
@@ -354,21 +354,21 @@ escolheropcoes:
                         $dataAccess = trim(preg_replace('/ -\d{4}$/', '', $matchAccess[1]));
                         $dataModify = trim(preg_replace('/ -\d{4}$/', '', $matchModify[1]));
                         $dataChange = trim(preg_replace('/ -\d{4}$/', '', $matchChange[1]));
-
+                
                         $accessTime = strtotime($dataAccess);
                         $modifyTime = strtotime($dataModify);
                         $changeTime = strtotime($dataChange);
-
+                
                         if ($indice === 0) {
                             $ultimoModifyTime = $modifyTime;
                             $ultimoChangeTime = $changeTime;
                         }
-
+                
                         // Motivo 1 - Access posterior ao Modify
                         if ($accessTime > $modifyTime) {
                             $motivos[] = "Motivo 1 - Access posterior ao Modify" . basename($arquivo);
                         }
-
+                
                         // Motivo 2 - Timestamps com .000
                         if (
                             preg_match('/\.0+$/', $dataAccess) ||
@@ -377,16 +377,16 @@ escolheropcoes:
                         ) {
                             $motivos[] = "Motivo 2 - Timestamps com .000" . basename($arquivo);
                         }
-
+                
                         // Motivo 3 - Modify diferente de Change no arquivo
                         if ($dataModify !== $dataChange) {
                             $motivos[] = "Motivo 3 - Modify diferente de Change no arquivo" . basename($arquivo);
                         }
-
+                
                         // Motivo 4 - Nome do arquivo não bate com Modify
                         if ($indice === 0) {
                             $arquivoMaisRecente = $arquivo;
-
+                        
                             if (preg_match('/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/', basename($arquivo), $match)) {
                                 $nomeNormalizado = preg_replace(
                                     '/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$/',
@@ -394,19 +394,19 @@ escolheropcoes:
                                     $match[1]
                                 );
                                 $nomeTimestamp = strtotime($nomeNormalizado);
-
+                        
                                 preg_match('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.(\d+)/', $dataModify, $modifyParts);
                                 $dataModifyBase = $modifyParts[1] ?? '';
                                 $nanosModify = (int)($modifyParts[2] ?? 0);
                                 $modifyTimestamp = strtotime($dataModifyBase);
-
+                        
                                 if ($nomeTimestamp !== false && $modifyTimestamp !== false) {
-
+  
                                     $nomeNsTotal = $nomeTimestamp * 1_000_000_000;
                                     $modifyNsTotal = ($modifyTimestamp * 1_000_000_000) + $nanosModify;
-
+                        
                                     $diffNs = abs($modifyNsTotal - $nomeNsTotal);
-
+                        
                                     if ($diffNs > 1_000_000_000) { 
                                         $motivos[] = "Motivo 4 - Nome do arquivo não bate com Modify: " . basename($arquivo);
                                     }
@@ -415,16 +415,13 @@ escolheropcoes:
                                 }
                             }
                         }
-
-
-
+                        
+                        
+                
                         // Motivo 8 - Access do .json diferente dos tempos do .bin
                         $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
                         $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
-
-                      if (true) {
-                      
-                      if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
+                        if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
                             $jsonAccess = trim(preg_replace('/ -\d{4}$/', '', $matchJsonAccess[1]));
                             $dataBinTimes = [$dataAccess, $dataModify, $dataChange];
                             if (!in_array($jsonAccess, $dataBinTimes)) {
@@ -437,7 +434,7 @@ escolheropcoes:
 
                     }
                 }
-
+                
                 // Verificações na pasta MReplays
                 $resultadoPasta = shell_exec('adb shell "stat /sdcard/Android/data/com.dts.freefireth/files/MReplays 2>/dev/null"');
                 if ($resultadoPasta) {
@@ -446,11 +443,11 @@ escolheropcoes:
                     foreach ($matches as $match) {
                         $timestamps[$match[1]] = trim($match[2]);
                     }
-
+                
                     if (count($timestamps) === 3) {
                         $pastaModifyTime = strtotime($timestamps['Modify']);
                         $pastaChangeTime = strtotime($timestamps['Change']);
-
+                
                         // Motivo 7 - Pasta modificada após o último replay
                         if ($ultimoModifyTime && $pastaModifyTime > $ultimoModifyTime) {
                             $motivos[] = "Motivo 7 - Pasta modificada após o último replay";
@@ -458,43 +455,55 @@ escolheropcoes:
                         if ($ultimoChangeTime && $pastaChangeTime > $ultimoChangeTime) {
                             $motivos[] = "Motivo 7 - Pasta modificada após o último replay";
                         }
-
+                
                         // Motivo 5 - Access, Modify e Change idênticos
                         if ($timestamps['Access'] === $timestamps['Modify'] && $timestamps['Modify'] === $timestamps['Change']) {
                             $motivos[] = "Motivo 5 - Access, Modify e Change idênticos";
                         }
-
+                
                         // Motivo 6 - Milissegundos .000 na pasta
                         if (preg_match('/\.0+$/', $timestamps['Modify']) || preg_match('/\.0+$/', $timestamps['Change'])) {
                             $motivos[] = "Motivo 6 - Milissegundos .000 na pasta";
                         }
-
+                
                         // Motivo 11 - Modify diferente de Change na pasta
                         if ($timestamps['Modify'] !== $timestamps['Change']) {
                             $motivos[] = "Motivo 11 - Modify diferente de Change na pasta";
                         }
 
-// Motivo 12 - SEMPRE
-if (true) {
+                        // Motivo 12 - Change da pasta MReplays diferente dos Access dos arquivos
+                        if (
+                            $arquivoMaisRecente &&
+                            isset($timestamps['Change'])
+                        ) {
+                            $changeMReplays = trim($timestamps['Change']);
+                        
+                            // 1) Stat do .bin
+                            $statBin = shell_exec('adb shell "stat ' . escapeshellarg($arquivoMaisRecente) . ' 2>/dev/null"');
+                            preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statBin, $matchesBin);
+                            $binAccess = isset($matchesBin[1]) ? end($matchesBin[1]) : '';
+                        
+                            // 2) Stat do .json
+                            $jsonPath = preg_replace('/\.bin$/', '.json', $arquivoMaisRecente);
+                            $statJson = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
+                            preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statJson, $matchesJson);
+                            $jsonAccess = isset($matchesJson[1]) ? end($matchesJson[1]) : '';
+                        
+                            if ($binAccess !== $changeMReplays && $jsonAccess !== $changeMReplays) {
+                                $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
+                                            "Change MReplays: $changeMReplays\n" .
+                                            "Access .bin:     $binAccess\n" .
+                                            "Access .json:    $jsonAccess";
+                            }
+                        }
+                        
 
-    // Se as variáveis existirem, ótimo; senão coloca "N/D"
-    $changeMReplays = $changeMReplays ?? 'N/D';
-    $binAccess      = $binAccess      ?? 'N/D';
-    $jsonAccess     = $jsonAccess     ?? 'N/D';
-
-    $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
-                 "Change MReplays: $changeMReplays\n" .
-                 "Access .bin:     $binAccess\n" .
-                 "Access .json:    $jsonAccess";
-}
 
 
 
 
 
-
-
-
+                
                         // Motivo 9 - Nome não bate com Modify da pasta + milissegundos suspeitos
                         if ($arquivoMaisRecente && isset($timestamps['Access'])) {
                             if (preg_match('/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/', basename($arquivoMaisRecente), $match)) {
@@ -513,7 +522,7 @@ if (true) {
                         }
                     }
                 }
-
+                
 
                 if (!empty($motivos)) {
                     echo $bold . $vermelho . "[!] Passador de replay detectado, aplique o W.O!\n";
@@ -529,11 +538,11 @@ if (true) {
 
                 if (!empty($resultadoPasta)) {
                     preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoPasta, $matchAccessPasta);
-
+                    
                     if (!empty($matchAccessPasta[1])) {
                         $dataAccessPasta = trim($matchAccessPasta[1]);
                         $dataAccessPastaSemMilesimos = preg_replace('/\.\d+.*$/', '', $dataAccessPasta);
-
+                        
                         $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dataAccessPastaSemMilesimos);
                         $dataFormatada = $dateTime ? $dateTime->format('d-m-Y H:i:s') : $dataAccessPastaSemMilesimos;
 
@@ -560,7 +569,7 @@ if (true) {
 
 
 
-
+                                                    
 
 
 
@@ -587,29 +596,29 @@ if (true) {
                     "/sdcard/Android/data/com.dts.freefireth"
                 ];
 
-
+                
 
                 foreach ($pastasParaVerificar as $pasta) {
                     $comandoStat = 'adb shell stat ' . escapeshellarg($pasta) . ' 2>&1';
                     $resultadoStat = shell_exec($comandoStat);
-
+                
                     if (strpos($resultadoStat, 'File:') !== false) {
                         preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoStat, $matchModify);
                         preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoStat, $matchChange);
-
+                
                         if ($matchModify && $matchChange) {
                             $dataModify = trim($matchModify[1]);
                             $dataChange = trim($matchChange[1]);
-
+                
                             $dataModifyFormatada = preg_replace('/\.\d+.*$/', '', $dataModify);
                             $dataChangeFormatada = preg_replace('/\.\d+.*$/', '', $dataChange);
-
+                
                             if ($dataModifyFormatada !== $dataChangeFormatada) {
                                 $nomefinalpasta = basename($pasta);
-
+                                
                                 $dateTimeChange = DateTime::createFromFormat('Y-m-d H:i:s', $dataChangeFormatada);
                                 $dataChangeFormatadaLegivel = $dateTimeChange ? $dateTimeChange->format('d-m-Y H:i:s') : $dataChangeFormatada;
-
+                                
                                 echo $bold . $vermelho . "[!] Bypass de renomear/substituir na pasta: $nomefinalpasta! Confira se o horário é após a partida, se sim, aplique o W.O!\n";
                                 echo $bold . $amarelo . "[i] Horário do renomeio/substituição: $dataChangeFormatadaLegivel\n\n";
                             }
@@ -687,58 +696,58 @@ if (true) {
 
                 $comandoFind = 'adb shell find ' . escapeshellarg($pastaShaders) . ' -name "shaders*" -type f 2>&1';
                 $arquivosShaders = shell_exec($comandoFind);
-
+                
                 if (!empty($arquivosShaders)) {
                     $arquivosShaders = explode("\n", trim($arquivosShaders));
-
+                
                     foreach ($arquivosShaders as $arquivo) {
                         if (empty($arquivo)) continue;
-
+                
                         $comandoStat = 'adb shell stat ' . escapeshellarg($arquivo) . ' 2>&1';
                         $resultadoStat = shell_exec($comandoStat);
-
+                
                         if (strpos($resultadoStat, 'File:') !== false) {
                             preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchAccess);
                             preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchModify);
                             preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchChange);
-
+                
                             if ($matchAccess && $matchModify && $matchChange) {
                                 $accessDate = $matchAccess[1];
                                 $modifyDate = $matchModify[1];
                                 $changeDate = $matchChange[1];
-
+                
                                 $nomeArquivo = basename($arquivo);
-
+                
                                 if ($accessDate === $modifyDate && $modifyDate === $changeDate) {
                                     if ($firstInstallDate) {
                                         $timestampArquivo = strtotime($accessDate);
                                         $timestampInstalacao = strtotime($firstInstallDate);
                                         $diferencaSegundos = abs($timestampArquivo - $timestampInstalacao);
-
+                                
                                         if ($diferencaSegundos <= 86400) {
                                             continue;
                                         }
                                     }
-
+                                
                                     echo $bold . $laranja . "[!] Possível Bypass Holograma detectado (ACCESS, MODIFY, CHANGE iguais)\n";
                                     echo $bold . $laranja . "[!] Arquivo: $nomeArquivo\n";
-
+                
                                     $dateTimeAccess = DateTime::createFromFormat('Y-m-d H:i:s', $accessDate);
                                     $dataAccessFormatada = $dateTimeAccess ? $dateTimeAccess->format('d-m-Y H:i:s') : $accessDate;
-
+                
                                     $dateTimeInstall = DateTime::createFromFormat('Y-m-d H:i:s', $firstInstallDate);
                                     $dataInstallFormatada = $dateTimeInstall ? $dateTimeInstall->format('d-m-Y H:i:s') : $firstInstallDate;
-
+                
                                     echo $bold . $laranja . "[!] Data da modificação (Access/Modify/Change): $dataAccessFormatada\n";
                                     echo $bold . $laranja . "[!] Data de instalação do FF: $dataInstallFormatada\n";
                                     echo $bold . $laranja . "[!] Se for após a partida, aplique o W.O!\n\n";
                                     continue;
                                 }
-
+                
                                 if ($modifyDate !== $changeDate) {
                                     $dateTimeChange = DateTime::createFromFormat('Y-m-d H:i:s', $changeDate);
                                     $dataChangeFormatadaLegivel = $dateTimeChange ? $dateTimeChange->format('d-m-Y H:i:s') : $changeDate;
-
+                
                                     echo $bold . $vermelho . "[!] Arquivo shader modificado: $nomeArquivo\n";
                                     echo $bold . $amarelo . "[i] Horário da modificação: $dataChangeFormatadaLegivel\n";
                                     echo $bold . $vermelho . "[!] Verifique se a data é após a partida, se sim aplique o W.O!\n\n";
@@ -763,41 +772,41 @@ if (true) {
                 if (!empty($resultadoShaders)) {
                     $arquivos = explode("\n", trim($resultadoShaders));
                     $arquivos = array_filter($arquivos);
-
+                
                     foreach ($arquivos as $arquivo) {
                         if (empty($arquivo)) continue;
-
+                
                         $comandoExiste = 'adb shell "if [ -f ' . escapeshellarg($arquivo) . ' ]; then echo 1; fi"';
                         if (empty(shell_exec($comandoExiste))) {
                             continue;
                         }
-
+                
                         $nomeArquivo = basename($arquivo);
-
+                
                         $comandoVerificaUnityFS = 'adb shell "head -c 20 ' . escapeshellarg($arquivo) . ' 2>/dev/null"';
                         $resultadoVerificaUnityFS = shell_exec($comandoVerificaUnityFS);
-
+                
                         if (!is_string($resultadoVerificaUnityFS) || strpos($resultadoVerificaUnityFS, "UnityFS") === false) {
                             continue;
                         }
-
+                
                         $comandoStat = 'adb shell "stat ' . escapeshellarg($arquivo) . ' 2>/dev/null"';
                         $resultadoStat = shell_exec($comandoStat);
-
+                
                         if (!empty($resultadoStat) && strpos($resultadoStat, "No such file or directory") === false) {
                             preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchModify);
                             preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchChange);
                             preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchAccess);
-
+                
                             if (!empty($matchModify[1]) && !empty($matchChange[1]) && !empty($matchAccess[1])) {
                                 $dataModifyOriginal = trim($matchModify[1]);
                                 $dateTimeModify = DateTime::createFromFormat('Y-m-d H:i:s', $dataModifyOriginal);
                                 $dataModify = $dateTimeModify ? $dateTimeModify->format('d-m-Y H:i:s') : "Formato inválido";
-
+                
                                 $currentDateTime = new DateTime("now");
                                 $interval = $currentDateTime->diff($dateTimeModify);
                                 $diffInSeconds = abs($interval->days * 24 * 60 * 60 + $interval->h * 3600 + $interval->i * 60 + $interval->s);
-
+                
                                 if ($diffInSeconds <= 3600) {
                                     echo $bold . $amarelo . "[!] Possível bypass detectado: arquivo shader alterado recentemente.\n";
                                     echo $bold . $amarelo . "[!] Arquivo: $nomeArquivo\n";
@@ -807,10 +816,10 @@ if (true) {
                                     $arquivoSuspeito = $nomeArquivo;
                                     break;
                                 }
-
+                
                                 $cmd = "adb shell dumpsys package com.dts.freefireth | grep -i firstInstallTime";
                                 $firstInstallTime = shell_exec($cmd);
-
+                
                                 if (!is_null($firstInstallTime) && preg_match('/firstInstallTime=([\d-]+ \d{2}:\d{2}:\d{2})/', $firstInstallTime, $matches)) {
                                     $dataInstalacao = trim($matches[1]);
                                     $dateTimeInstalacao = DateTime::createFromFormat('Y-m-d H:i:s', $dataInstalacao);
@@ -818,7 +827,7 @@ if (true) {
                                 } else {
                                     $dataInstalacaoFormatada = "Data de instalação não encontrada.";
                                 }
-
+                
                                 if ($dataModify === $matchChange[1] && $dataModify === $matchAccess[1]) {
                                     if (stripos($nomeArquivo, 'shader') !== false) {
                                         if ($dataModify !== $dataInstalacao) {
@@ -835,7 +844,7 @@ if (true) {
                             }
                         }
                     }
-
+                
                     if ($encontrouBypass) {
                         echo $bold . $amarelo . "[!] Modificação em arquivo de shaders detectada. Arquivo: " . $arquivoSuspeito . "\n";
                         echo $bold . $amarelo . "[*] Hora da modificação: " . $dataModify . "\n";
@@ -1012,7 +1021,7 @@ if (true) {
                     foreach ($arquivos as $arquivo) {
                         $arquivo = (string)$arquivo;
                         if ($arquivo === '') continue;
-
+                        
                         $nomeArquivo = basename($arquivo);
                         $caminhoArquivo = $arquivo;
 
@@ -1083,10 +1092,10 @@ if (true) {
                 }
 
 
+                
 
 
-
-
+            
 
                 echo $bold . $branco . "[+] Após verificar in-game se o usuário está de Wallhack, olhando skins de armas e atrás da parede, verifique os horários do Shaders e OBB e compare também com o horário do replay, caso esteja muito diferente as datas, aplique o W.O!\n\n";
 
@@ -1105,7 +1114,7 @@ if (true) {
             date_default_timezone_set('America/Sao_Paulo');
             shell_exec('adb start-server > /dev/null 2>&1');
 
-
+    
 
             $comandoDispositivos = shell_exec("adb devices 2>&1");
 
@@ -1120,7 +1129,7 @@ if (true) {
                     echo $bold . $vermelho . "[!] Pareamento realizado de maneira incorreta, digite \"adb disconnect\" e refaça o processo.\n\n";
                     exit;
                 }
-
+                
                 if (!empty($comandoVerificarFF) && strpos($comandoVerificarFF, "com.dts.freefiremax") !== false) {
                 } else {
                     echo $bold . $vermelho . "[!] O FreeFire MAX está desinstalado, cancelando a telagem...\n\n";
@@ -1146,18 +1155,18 @@ if (true) {
                     'magisk_ver'   => 'adb shell "su -c magisk --version" 2>/dev/null',
                     'adb_root'     => 'adb root 2>/dev/null',
                 ];
-
+                
                 $rootDetectado = false;
                 $erroAdb = false;
-
+                
                 foreach ($comandoVerificacoes as $nome => $comando) {
                     $resultado = shell_exec($comando);
-
+                
                     if ($nome === 'test_adb' && (empty($resultado) || strpos($resultado, 'ADB_OK') === false)) {
                         $erroAdb = true;
                         break;
                     }
-
+                
                     if (
                         !empty($resultado) &&
                         (
@@ -1171,7 +1180,7 @@ if (true) {
                         break;
                     }
                 }
-
+                
                 if ($erroAdb) {
                     echo $bold . $vermelho . "[+] Ambiente Termux modificado, aplique o W.O.\n\n";
                 } elseif ($rootDetectado) {
@@ -1179,7 +1188,7 @@ if (true) {
                 } else {
                     echo $bold . $fverde . "[-] O dispositivo não tem root.\n\n";
                 }
-
+                
 
 
             echo $bold . $azul . "[+] Checando se o dispositivo foi reiniciado recentemente...\n";
@@ -1207,10 +1216,10 @@ if (true) {
                 } else {
                     echo $bold . $vermelho . "[!] Não foi possível capturar a data/hora do sistema.\n\n";
                 }
-
+            
             echo $bold . $azul . "[+] Verificando mudanças de data/hora...\n";
 
-
+                
             $logcatOutput = shell_exec('adb logcat -d | grep "UsageStatsService: Time changed" | grep -v "HCALL"');
 
             if ($logcatOutput !== null && trim($logcatOutput) !== "") {
@@ -1308,7 +1317,7 @@ if (true) {
 
             if (!is_null($saida)) {
                 $linhas = explode("\n", trim($saida));
-
+                
                 foreach ($linhas as $linha) {
                     if (!empty($linha) && preg_match('/^([0-9]{2}-[0-9]{2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}) (.+)$/', $linha, $matches)) {
                         $data = $matches[1];
@@ -1331,20 +1340,20 @@ if (true) {
                 $comandoArquivos = 'adb shell "ls -t /sdcard/Android/data/com.dts.freefiremax/files/MReplays/*.bin 2>/dev/null"';
                 $output = shell_exec($comandoArquivos) ?? '';
                 $arquivos = array_filter(explode("\n", trim($output)));
-
+                
                 $motivos = [];
                 $arquivoMaisRecente = null;
                 $ultimoModifyTime = null;
                 $ultimoChangeTime = null;
-
+                
                 // Motivo 10 - Nenhum replay encontrado
                 if (empty($arquivos)) {
                     $motivos[] = "Motivo 10 - Nenhum arquivo .bin encontrado na pasta MReplays";
                 }
-
+                
                 foreach ($arquivos as $indice => $arquivo) {
                     $resultadoStat = shell_exec('adb shell "stat ' . escapeshellarg($arquivo) . '"');
-
+                
                     if (
                         preg_match('/Access: (.*?)\n/', $resultadoStat, $matchAccess) &&
                         preg_match('/Modify: (.*?)\n/', $resultadoStat, $matchModify) &&
@@ -1353,21 +1362,21 @@ if (true) {
                         $dataAccess = trim(preg_replace('/ -\d{4}$/', '', $matchAccess[1]));
                         $dataModify = trim(preg_replace('/ -\d{4}$/', '', $matchModify[1]));
                         $dataChange = trim(preg_replace('/ -\d{4}$/', '', $matchChange[1]));
-
+                
                         $accessTime = strtotime($dataAccess);
                         $modifyTime = strtotime($dataModify);
                         $changeTime = strtotime($dataChange);
-
+                
                         if ($indice === 0) {
                             $ultimoModifyTime = $modifyTime;
                             $ultimoChangeTime = $changeTime;
                         }
-
+                
                         // Motivo 1 - Access posterior ao Modify
                         if ($accessTime > $modifyTime) {
                             $motivos[] = "Motivo 1 - Access posterior ao Modify" . basename($arquivo);
                         }
-
+                
                         // Motivo 2 - Timestamps com .000
                         if (
                             preg_match('/\.0+$/', $dataAccess) ||
@@ -1376,16 +1385,16 @@ if (true) {
                         ) {
                             $motivos[] = "Motivo 2 - Timestamps com .000" . basename($arquivo);
                         }
-
+                
                         // Motivo 3 - Modify diferente de Change no arquivo
                         if ($dataModify !== $dataChange) {
                             $motivos[] = "Motivo 3 - Modify diferente de Change no arquivo" . basename($arquivo);
                         }
-
+                
                         // Motivo 4 - Nome do arquivo não bate com Modify
                         if ($indice === 0) {
                             $arquivoMaisRecente = $arquivo;
-
+                        
                             if (preg_match('/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/', basename($arquivo), $match)) {
                                 $nomeNormalizado = preg_replace(
                                     '/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})$/',
@@ -1393,19 +1402,19 @@ if (true) {
                                     $match[1]
                                 );
                                 $nomeTimestamp = strtotime($nomeNormalizado);
-
+                        
                                 preg_match('/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.(\d+)/', $dataModify, $modifyParts);
                                 $dataModifyBase = $modifyParts[1] ?? '';
                                 $nanosModify = (int)($modifyParts[2] ?? 0);
                                 $modifyTimestamp = strtotime($dataModifyBase);
-
+                        
                                 if ($nomeTimestamp !== false && $modifyTimestamp !== false) {
-
+  
                                     $nomeNsTotal = $nomeTimestamp * 1_000_000_000;
                                     $modifyNsTotal = ($modifyTimestamp * 1_000_000_000) + $nanosModify;
-
+                        
                                     $diffNs = abs($modifyNsTotal - $nomeNsTotal);
-
+                        
                                     if ($diffNs > 1_000_000_000) { 
                                         $motivos[] = "Motivo 4 - Nome do arquivo não bate com Modify: " . basename($arquivo);
                                     }
@@ -1414,7 +1423,7 @@ if (true) {
                                 }
                             }
                         }
-
+                
                         // Motivo 8 - Access do .json diferente dos tempos do .bin
                         $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
                         $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
@@ -1431,7 +1440,7 @@ if (true) {
 
                     }
                 }
-
+                
                 // Verificações na pasta MReplays
                 $resultadoPasta = shell_exec('adb shell "stat /sdcard/Android/data/com.dts.freefiremax/files/MReplays 2>/dev/null"');
                 if ($resultadoPasta) {
@@ -1440,11 +1449,11 @@ if (true) {
                     foreach ($matches as $match) {
                         $timestamps[$match[1]] = trim($match[2]);
                     }
-
+                
                     if (count($timestamps) === 3) {
                         $pastaModifyTime = strtotime($timestamps['Modify']);
                         $pastaChangeTime = strtotime($timestamps['Change']);
-
+                
                         // Motivo 7 - Pasta modificada após o último replay
                         if ($ultimoModifyTime && $pastaModifyTime > $ultimoModifyTime) {
                             $motivos[] = "Motivo 7 - Pasta modificada após o último replay";
@@ -1452,17 +1461,17 @@ if (true) {
                         if ($ultimoChangeTime && $pastaChangeTime > $ultimoChangeTime) {
                             $motivos[] = "Motivo 7 - Pasta modificada após o último replay";
                         }
-
+                
                         // Motivo 5 - Access, Modify e Change idênticos
                         if ($timestamps['Access'] === $timestamps['Modify'] && $timestamps['Modify'] === $timestamps['Change']) {
                             $motivos[] = "Motivo 5 - Access, Modify e Change idênticos";
                         }
-
+                
                         // Motivo 6 - Milissegundos .000 na pasta
                         if (preg_match('/\.0+$/', $timestamps['Modify']) || preg_match('/\.0+$/', $timestamps['Change'])) {
                             $motivos[] = "Motivo 6 - Milissegundos .000 na pasta";
                         }
-
+                
                         // Motivo 11 - Modify diferente de Change na pasta
                         if ($timestamps['Modify'] !== $timestamps['Change']) {
                             $motivos[] = "Motivo 11 - Modify diferente de Change na pasta";
@@ -1474,18 +1483,18 @@ if (true) {
                             isset($timestamps['Change'])
                         ) {
                             $changeMReplays = trim($timestamps['Change']);
-
+                        
                             // 1) Stat do .bin
                             $statBin = shell_exec('adb shell "stat ' . escapeshellarg($arquivoMaisRecente) . ' 2>/dev/null"');
                             preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statBin, $matchesBin);
                             $binAccess = isset($matchesBin[1]) ? end($matchesBin[1]) : '';
-
+                        
                             // 2) Stat do .json
                             $jsonPath = preg_replace('/\.bin$/', '.json', $arquivoMaisRecente);
                             $statJson = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
                             preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statJson, $matchesJson);
                             $jsonAccess = isset($matchesJson[1]) ? end($matchesJson[1]) : '';
-
+                        
                             if ($binAccess !== $changeMReplays && $jsonAccess !== $changeMReplays) {
                                 $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
                                             "Change MReplays: $changeMReplays\n" .
@@ -1493,12 +1502,12 @@ if (true) {
                                             "Access .json:    $jsonAccess";
                             }
                         }
+                        
+                        
 
 
 
-
-
-
+                
                         // Motivo 9 - Nome não bate com Modify da pasta + milissegundos suspeitos
                         if ($arquivoMaisRecente && isset($timestamps['Access'])) {
                             if (preg_match('/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/', basename($arquivoMaisRecente), $match)) {
@@ -1517,7 +1526,7 @@ if (true) {
                         }
                     }
                 }
-
+                
 
                 if (!empty($motivos)) {
                     echo $bold . $vermelho . "[!] Passador de replay detectado, aplique o W.O!\n";
@@ -1533,11 +1542,11 @@ if (true) {
 
                 if (!empty($resultadoPasta)) {
                     preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoPasta, $matchAccessPasta);
-
+                    
                     if (!empty($matchAccessPasta[1])) {
                         $dataAccessPasta = trim($matchAccessPasta[1]);
                         $dataAccessPastaSemMilesimos = preg_replace('/\.\d+.*$/', '', $dataAccessPasta);
-
+                        
                         $dateTime = DateTime::createFromFormat('Y-m-d H:i:s', $dataAccessPastaSemMilesimos);
                         $dataFormatada = $dateTime ? $dateTime->format('d-m-Y H:i:s') : $dataAccessPastaSemMilesimos;
 
@@ -1564,7 +1573,7 @@ if (true) {
 
 
 
-
+                                                    
 
 
 
@@ -1592,29 +1601,29 @@ if (true) {
                     "/sdcard/Android/data/com.dts.freefiremax"
                 ];
 
-
+                
 
                 foreach ($pastasParaVerificar as $pasta) {
                     $comandoStat = 'adb shell stat ' . escapeshellarg($pasta) . ' 2>&1';
                     $resultadoStat = shell_exec($comandoStat);
-
+                
                     if (strpos($resultadoStat, 'File:') !== false) {
                         preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoStat, $matchModify);
                         preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)/', $resultadoStat, $matchChange);
-
+                
                         if ($matchModify && $matchChange) {
                             $dataModify = trim($matchModify[1]);
                             $dataChange = trim($matchChange[1]);
-
+                
                             $dataModifyFormatada = preg_replace('/\.\d+.*$/', '', $dataModify);
                             $dataChangeFormatada = preg_replace('/\.\d+.*$/', '', $dataChange);
-
+                
                             if ($dataModifyFormatada !== $dataChangeFormatada) {
                                 $nomefinalpasta = basename($pasta);
-
+                                
                                 $dateTimeChange = DateTime::createFromFormat('Y-m-d H:i:s', $dataChangeFormatada);
                                 $dataChangeFormatadaLegivel = $dateTimeChange ? $dateTimeChange->format('d-m-Y H:i:s') : $dataChangeFormatada;
-
+                                
                                 echo $bold . $vermelho . "[!] Bypass de renomear/substituir na pasta: $nomefinalpasta! Confira se o horário é após a partida, se sim, aplique o W.O!\n";
                                 echo $bold . $amarelo . "[i] Horário do renomeio/substituição: $dataChangeFormatadaLegivel\n\n";
                             }
@@ -1692,58 +1701,58 @@ if (true) {
 
                 $comandoFind = 'adb shell find ' . escapeshellarg($pastaShaders) . ' -name "shaders*" -type f 2>&1';
                 $arquivosShaders = shell_exec($comandoFind);
-
+                
                 if (!empty($arquivosShaders)) {
                     $arquivosShaders = explode("\n", trim($arquivosShaders));
-
+                
                     foreach ($arquivosShaders as $arquivo) {
                         if (empty($arquivo)) continue;
-
+                
                         $comandoStat = 'adb shell stat ' . escapeshellarg($arquivo) . ' 2>&1';
                         $resultadoStat = shell_exec($comandoStat);
-
+                
                         if (strpos($resultadoStat, 'File:') !== false) {
                             preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchAccess);
                             preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchModify);
                             preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchChange);
-
+                
                             if ($matchAccess && $matchModify && $matchChange) {
                                 $accessDate = $matchAccess[1];
                                 $modifyDate = $matchModify[1];
                                 $changeDate = $matchChange[1];
-
+                
                                 $nomeArquivo = basename($arquivo);
-
+                
                                 if ($accessDate === $modifyDate && $modifyDate === $changeDate) {
                                     if ($firstInstallDate) {
                                         $timestampArquivo = strtotime($accessDate);
                                         $timestampInstalacao = strtotime($firstInstallDate);
                                         $diferencaSegundos = abs($timestampArquivo - $timestampInstalacao);
-
+                                
                                         if ($diferencaSegundos <= 86400) {
                                             continue;
                                         }
                                     }
-
+                                
                                     echo $bold . $laranja . "[!] Possível Bypass Holograma detectado (ACCESS, MODIFY, CHANGE iguais)\n";
                                     echo $bold . $laranja . "[!] Arquivo: $nomeArquivo\n";
-
+                
                                     $dateTimeAccess = DateTime::createFromFormat('Y-m-d H:i:s', $accessDate);
                                     $dataAccessFormatada = $dateTimeAccess ? $dateTimeAccess->format('d-m-Y H:i:s') : $accessDate;
-
+                
                                     $dateTimeInstall = DateTime::createFromFormat('Y-m-d H:i:s', $firstInstallDate);
                                     $dataInstallFormatada = $dateTimeInstall ? $dateTimeInstall->format('d-m-Y H:i:s') : $firstInstallDate;
-
+                
                                     echo $bold . $laranja . "[!] Data da modificação (Access/Modify/Change): $dataAccessFormatada\n";
                                     echo $bold . $laranja . "[!] Data de instalação do FF: $dataInstallFormatada\n";
                                     echo $bold . $laranja . "[!] Se for após a partida, aplique o W.O!\n\n";
                                     continue;
                                 }
-
+                
                                 if ($modifyDate !== $changeDate) {
                                     $dateTimeChange = DateTime::createFromFormat('Y-m-d H:i:s', $changeDate);
                                     $dataChangeFormatadaLegivel = $dateTimeChange ? $dateTimeChange->format('d-m-Y H:i:s') : $changeDate;
-
+                
                                     echo $bold . $vermelho . "[!] Arquivo shader modificado: $nomeArquivo\n";
                                     echo $bold . $amarelo . "[i] Horário da modificação: $dataChangeFormatadaLegivel\n";
                                     echo $bold . $vermelho . "[!] Verifique se a data é após a partida, se sim aplique o W.O!\n\n";
@@ -1768,41 +1777,41 @@ if (true) {
                 if (!empty($resultadoShaders)) {
                     $arquivos = explode("\n", trim($resultadoShaders));
                     $arquivos = array_filter($arquivos);
-
+                
                     foreach ($arquivos as $arquivo) {
                         if (empty($arquivo)) continue;
-
+                
                         $comandoExiste = 'adb shell "if [ -f ' . escapeshellarg($arquivo) . ' ]; then echo 1; fi"';
                         if (empty(shell_exec($comandoExiste))) {
                             continue;
                         }
-
+                
                         $nomeArquivo = basename($arquivo);
-
+                
                         $comandoVerificaUnityFS = 'adb shell "head -c 20 ' . escapeshellarg($arquivo) . ' 2>/dev/null"';
                         $resultadoVerificaUnityFS = shell_exec($comandoVerificaUnityFS);
-
+                
                         if (!is_string($resultadoVerificaUnityFS) || strpos($resultadoVerificaUnityFS, "UnityFS") === false) {
                             continue;
                         }
-
+                
                         $comandoStat = 'adb shell "stat ' . escapeshellarg($arquivo) . ' 2>/dev/null"';
                         $resultadoStat = shell_exec($comandoStat);
-
+                
                         if (!empty($resultadoStat) && strpos($resultadoStat, "No such file or directory") === false) {
                             preg_match('/Modify: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchModify);
                             preg_match('/Change: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchChange);
                             preg_match('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/', $resultadoStat, $matchAccess);
-
+                
                             if (!empty($matchModify[1]) && !empty($matchChange[1]) && !empty($matchAccess[1])) {
                                 $dataModifyOriginal = trim($matchModify[1]);
                                 $dateTimeModify = DateTime::createFromFormat('Y-m-d H:i:s', $dataModifyOriginal);
                                 $dataModify = $dateTimeModify ? $dateTimeModify->format('d-m-Y H:i:s') : "Formato inválido";
-
+                
                                 $currentDateTime = new DateTime("now");
                                 $interval = $currentDateTime->diff($dateTimeModify);
                                 $diffInSeconds = abs($interval->days * 24 * 60 * 60 + $interval->h * 3600 + $interval->i * 60 + $interval->s);
-
+                
                                 if ($diffInSeconds <= 3600) {
                                     echo $bold . $amarelo . "[!] Possível bypass detectado: arquivo shader alterado recentemente.\n";
                                     echo $bold . $amarelo . "[!] Arquivo: $nomeArquivo\n";
@@ -1812,10 +1821,10 @@ if (true) {
                                     $arquivoSuspeito = $nomeArquivo;
                                     break;
                                 }
-
+                
                                 $cmd = "adb shell dumpsys package com.dts.freefiremax | grep -i firstInstallTime";
                                 $firstInstallTime = shell_exec($cmd);
-
+                
                                 if (!is_null($firstInstallTime) && preg_match('/firstInstallTime=([\d-]+ \d{2}:\d{2}:\d{2})/', $firstInstallTime, $matches)) {
                                     $dataInstalacao = trim($matches[1]);
                                     $dateTimeInstalacao = DateTime::createFromFormat('Y-m-d H:i:s', $dataInstalacao);
@@ -1823,7 +1832,7 @@ if (true) {
                                 } else {
                                     $dataInstalacaoFormatada = "Data de instalação não encontrada.";
                                 }
-
+                
                                 if ($dataModify === $matchChange[1] && $dataModify === $matchAccess[1]) {
                                     if (stripos($nomeArquivo, 'shader') !== false) {
                                         if ($dataModify !== $dataInstalacao) {
@@ -1840,7 +1849,7 @@ if (true) {
                             }
                         }
                     }
-
+                
                     if ($encontrouBypass) {
                         echo $bold . $amarelo . "[!] Modificação em arquivo de shaders detectada. Arquivo: " . $arquivoSuspeito . "\n";
                         echo $bold . $amarelo . "[*] Hora da modificação: " . $dataModify . "\n";
@@ -2017,7 +2026,7 @@ if (true) {
                     foreach ($arquivos as $arquivo) {
                         $arquivo = (string)$arquivo;
                         if ($arquivo === '') continue;
-
+                        
                         $nomeArquivo = basename($arquivo);
                         $caminhoArquivo = $arquivo;
 
@@ -2088,10 +2097,10 @@ if (true) {
                 }
 
 
+                
 
 
-
-
+            
 
                 echo $bold . $branco . "[+] Após verificar in-game se o usuário está de Wallhack, olhando skins de armas e atrás da parede, verifique os horários do Shaders e OBB e compare também com o horário do replay, caso esteja muito diferente as datas, aplique o W.O!\n\n";
 
