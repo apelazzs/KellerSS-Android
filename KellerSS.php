@@ -471,31 +471,13 @@ escolheropcoes:
                             $motivos[] = "Motivo 11 - Modify diferente de Change na pasta";
                         }
 
-                        // Motivo 12 - Change da pasta MReplays diferente dos Access dos arquivos
-                        if (
-                            $arquivoMaisRecente &&
-                            isset($timestamps['Change'])
-                        ) {
-                            $changeMReplays = trim($timestamps['Change']);
-
-                            // 1) Stat do .bin
-                            $statBin = shell_exec('adb shell "stat ' . escapeshellarg($arquivoMaisRecente) . ' 2>/dev/null"');
-                            preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statBin, $matchesBin);
-                            $binAccess = isset($matchesBin[1]) ? end($matchesBin[1]) : '';
-
-                            // 2) Stat do .json
-                            $jsonPath = preg_replace('/\.bin$/', '.json', $arquivoMaisRecente);
-                            $statJson = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
-                            preg_match_all('/Access: (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)(?: [-+]\d{4})?/', $statJson, $matchesJson);
-                            $jsonAccess = isset($matchesJson[1]) ? end($matchesJson[1]) : '';
-
-                            if ($binAccess !== $changeMReplays && $jsonAccess !== $changeMReplays) {
-                                $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
-                                            "Change MReplays: $changeMReplays\n" .
-                                            "Access .bin:     $binAccess\n" .
-                                            "Access .json:    $jsonAccess";
-                            }
-                        }
+                        /* forçar Motivo 12 sempre */
+    if (true) {   //  <-- era: if ($binAccess !== $changeMReplays && $jsonAccess !== $changeMReplays)
+        $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
+                     "Change MReplays: $changeMReplays\n" .
+                     "Access .bin:     $binAccess\n" .
+                     "Access .json:    $jsonAccess";
+    }
 
 
 
