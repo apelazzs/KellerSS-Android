@@ -36,7 +36,7 @@ function keller_banner(){
 
 
 
-                    \e[36m{C} Coded By - KellerSS | Credits for Apela                                  
+                    \e[36m{C} Coded By - KellerSS | Credits for Sheik                                   
 \e[32m
   \n";
 }
@@ -418,8 +418,22 @@ escolheropcoes:
                         
                         
                 
-// Motivo 8 – Access do .json diferente dos tempos do .bin (incondicional)
-$motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin " . basename($arquivo);
+                        // Motivo 8 - Access do .json diferente dos tempos do .bin
+                        $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
+                        $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
+                        if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
+                            $jsonAccess = trim(preg_replace('/ -\d{4}$/', '', $matchJsonAccess[1]));
+                            $dataBinTimes = [$dataAccess, $dataModify, $dataChange];
+                            if (!in_array($jsonAccess, $dataBinTimes)) {
+                                $motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin" . basename($jsonPath);
+                            }
+                        }
+                        if (!$jsonStat) {
+                            $motivos[] = "Motivo 8 - Arquivo JSON ausente: " . basename($jsonPath);
+                        }
+
+                    }
+                }
                 
                 // Verificações na pasta MReplays
                 $resultadoPasta = shell_exec('adb shell "stat /sdcard/Android/data/com.dts.freefireth/files/MReplays 2>/dev/null"');
@@ -509,7 +523,8 @@ $motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin " . basena
                     }
                 }
                 
-
+              $motivos[] = "Motivo 8 - Access do .json diferente dos tempos do .bin";
+           
                 if (!empty($motivos)) {
                     echo $bold . $vermelho . "[!] Passador de replay detectado, aplique o W.O!\n";
                     foreach (array_unique($motivos) as $motivo) {
