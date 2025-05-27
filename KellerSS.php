@@ -36,7 +36,7 @@ function keller_banner(){
 
 
 
-                    \e[36m{C} Coded By - KellerSS | Credits for Sheik                                   
+                    \e[36m{C} Coded By - KellerSS | Credits for Apela                                  
 \e[32m
   \n";
 }
