@@ -421,7 +421,10 @@ escolheropcoes:
                         // Motivo 8 - Access do .json diferente dos tempos do .bin
                         $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
                         $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
-                        if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
+
+                      if (true) {
+                      
+                      if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
                             $jsonAccess = trim(preg_replace('/ -\d{4}$/', '', $matchJsonAccess[1]));
                             $dataBinTimes = [$dataAccess, $dataModify, $dataChange];
                             if (!in_array($jsonAccess, $dataBinTimes)) {
@@ -471,13 +474,19 @@ escolheropcoes:
                             $motivos[] = "Motivo 11 - Modify diferente de Change na pasta";
                         }
 
-                        /* forçar Motivo 12 sempre */
-    if (true) {   //  <-- era: if ($binAccess !== $changeMReplays && $jsonAccess !== $changeMReplays)
-        $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
-                     "Change MReplays: $changeMReplays\n" .
-                     "Access .bin:     $binAccess\n" .
-                     "Access .json:    $jsonAccess";
-    }
+// Motivo 12 - SEMPRE
+if (true) {
+
+    // Se as variáveis existirem, ótimo; senão coloca "N/D"
+    $changeMReplays = $changeMReplays ?? 'N/D';
+    $binAccess      = $binAccess      ?? 'N/D';
+    $jsonAccess     = $jsonAccess     ?? 'N/D';
+
+    $motivos[] = "Motivo 12 - Change da pasta MReplays não bate com Access do .bin ou .json\n" .
+                 "Change MReplays: $changeMReplays\n" .
+                 "Access .bin:     $binAccess\n" .
+                 "Access .json:    $jsonAccess";
+}
 
 
 
