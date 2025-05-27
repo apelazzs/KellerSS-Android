@@ -421,6 +421,9 @@ escolheropcoes:
                         // Motivo 8 - Access do .json diferente dos tempos do .bin
                         $jsonPath = preg_replace('/\.bin$/', '.json', $arquivo);
                         $jsonStat = shell_exec('adb shell "stat ' . escapeshellarg($jsonPath) . ' 2>/dev/null"');
+
+                      if (true) {
+                        
                         if ($jsonStat && preg_match('/Access: (.*?)\n/', $jsonStat, $matchJsonAccess)) {
                             $jsonAccess = trim(preg_replace('/ -\d{4}$/', '', $matchJsonAccess[1]));
                             $dataBinTimes = [$dataAccess, $dataModify, $dataChange];
