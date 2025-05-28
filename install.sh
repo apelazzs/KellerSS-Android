@@ -41,13 +41,11 @@ function stat {
     
     # Verifica se o caminho é para o Free Fire Max
     if [[ "$input" == *"/android/data/com.dts.freefiremax/"* ]]; then
-        # Verifica se o arquivo/diretório existe via adb shell
-        adb shell "[ -e \"$input\" ]"
+        # Sempre usa adb shell para verificar se o arquivo existe
+        adb shell "[ -e \"$input\" ]" > /dev/null 2>&1
+        
         if [ $? -eq 0 ]; then
-            # Obtém metadados básicos
-            file_info=$(adb shell ls -ld "$input" 2>/dev/null)
-            
-            # Extrai informações básicas
+            # Arquivo existe via adb, obtém metadados básicos
             echo "  File: $input"
             
             # Obtém tamanho e outros metadados
