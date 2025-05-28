@@ -38,173 +38,110 @@ function cd() {
 # Função stat personalizada para Free Fire Max
 function stat {
     input="$1"
-
-    # Normaliza caminho: remove barra final, converte /sdcard pra /storage/emulated/0
-    target="${input%/}"
-    if [[ "$target" == /sdcard/* ]]; then
-        target="/storage/emulated/0${target#/sdcard}"
-    fi
-
-    # Caminhos base que queremos monitorar
-    base_mreplays="/storage/emulated/0/Android/data/com.dts.freefiremax/files/mreplays"
-    base_paths=(
-        "$base_mreplays"
-        "/storage/emulated/0/Android/data/com.dts.freefiremax/files"
-        "/storage/emulated/0/Android/data/com.dts.freefiremax"
-    )
-
-    for base in "${base_paths[@]}"; do
-        if [[ "$target" == "$base"* ]]; then
-            if [ -e "$target" ]; then
-                # Extrair metadados básicos
-                size=$(/system/bin/stat -c '%s' "$target")
-                blocks=$(/system/bin/stat -c '%b' "$target")
-                io_block=$(/system/bin/stat -c '%o' "$target")
-                device=$(/system/bin/stat -c '%D' "$target")
-                inode=$(/system/bin/stat -c '%i' "$target")
-                links=$(/system/bin/stat -c '%h' "$target")
-                
-                # Cabeçalho padrão
-                echo "  File: $target"
-                echo "  Size: $size    Blocks: $blocks    IO Block: $io_block"
-                echo "Device: $device    Inode: $inode    Links: $links"
-                
-                # Permissões e UID/GID
-                perm=$(/system/bin/stat -c '%A' "$target")
-                uid=$(/system/bin/stat -c '%u' "$target")
-                uid_name=$(/system/bin/stat -c '%U' "$target")
-                gid=$(/system/bin/stat -c '%g' "$target")
-                gid_name=$(/system/bin/stat -c '%G' "$target")
-                echo "Access: ($perm)  Uid: ($uid/$uid_name)   Gid: ($gid/$gid_name)"
-                
-                # Timezone atual
-                timezone=$(date +%z)
-                
-                # Pasta mreplays (diretório principal)
-                if [[ "$target" == "$base_mreplays" ]]; then
-                    # Encontrar o arquivo .json mais recente
-                    latest_json=$(ls -t "$base_mreplays"/*.json 2>/dev/null | head -n 1)
-                    
-                    if [ -n "$latest_json" ]; then
-                        # Extrair timestamp do nome do arquivo (YYYY-MM-DD-HH-MM-SS)
-                        json_basename=$(basename "$latest_json" .json)
-                        if [[ "$json_basename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2}) ]]; then
-                            year=${BASH_REMATCH[1]}
-                            month=${BASH_REMATCH[2]}
-                            day=${BASH_REMATCH[3]}
-                            hour=${BASH_REMATCH[4]}
-                            minute=${BASH_REMATCH[5]}
-                            second=${BASH_REMATCH[6]}
-                            
-                            # Modify e Change = timestamp do .json mais recente com nanos fixos
-                            echo "Modify: $year-$month-$day $hour:$minute:$second.851594384 $timezone"
-                            echo "Change: $year-$month-$day $hour:$minute:$second.851594384 $timezone"
-                            
-                            # Access = até 24h antes, com nanos aleatórios
-                            # Calcular timestamp 24h antes (simples, sem considerar mudanças de mês/ano)
-                            random_hours=$((RANDOM % 24))
-                            random_minutes=$((RANDOM % 60))
-                            random_seconds=$((RANDOM % 60))
-                            
-                            # Ajustar hora
-                            access_hour=$((10#$hour - random_hours))
-                            if ((access_hour < 0)); then
-                                access_hour=$((access_hour + 24))
-                                # Ajustar dia (simplificado)
-                                day=$((10#$day - 1))
-                                if ((day < 1)); then
-                                    day=28  # Simplificado, não considera meses diferentes
-                                fi
-                            fi
-                            
-                            # Formatar com zeros à esquerda
-                            access_hour=$(printf "%02d" $access_hour)
-                            day=$(printf "%02d" $day)
-                            
-                            # Gerar nanossegundos aleatórios
-                            random_nanos=$(printf "%09d" $((RANDOM * RANDOM % 1000000000)))
-                            
-                            echo "Access: $year-$month-$day $access_hour:$minute:$second.$random_nanos $timezone"
+    
+    # Verifica se o caminho é para o Free Fire Max
+    if [[ "$input" == *"/android/data/com.dts.freefiremax/"* ]]; then
+        # Verifica se o arquivo/diretório existe via adb shell
+        adb shell "[ -e \"$input\" ]"
+        if [ $? -eq 0 ]; then
+            # Obtém metadados básicos
+            file_info=$(adb shell ls -ld "$input" 2>/dev/null)
+            
+            # Extrai informações básicas
+            echo "  File: $input"
+            
+            # Obtém tamanho e outros metadados
+            size=$(adb shell stat -c '%s' "$input" 2>/dev/null)
+            blocks=$(adb shell stat -c '%b' "$input" 2>/dev/null)
+            io_block=$(adb shell stat -c '%o' "$input" 2>/dev/null)
+            echo "  Size: $size    Blocks: $blocks    IO Block: $io_block"
+            
+            # Obtém device, inode, links
+            device=$(adb shell stat -c '%D' "$input" 2>/dev/null)
+            inode=$(adb shell stat -c '%i' "$input" 2>/dev/null)
+            links=$(adb shell stat -c '%h' "$input" 2>/dev/null)
+            echo "Device: $device    Inode: $inode    Links: $links"
+            
+            # Obtém permissões e UID/GID
+            perm=$(adb shell stat -c '%A' "$input" 2>/dev/null)
+            uid=$(adb shell stat -c '%u' "$input" 2>/dev/null)
+            uid_name=$(adb shell stat -c '%U' "$input" 2>/dev/null)
+            gid=$(adb shell stat -c '%g' "$input" 2>/dev/null)
+            gid_name=$(adb shell stat -c '%G' "$input" 2>/dev/null)
+            echo "Access: ($perm)  Uid: ($uid/$uid_name)   Gid: ($gid/$gid_name)"
+            
+            # Agora vem a parte de falsificação dos timestamps
+            # Se for um arquivo .bin dentro da pasta mreplays
+            if [[ "$input" == *"/mreplays/"*".bin" ]]; then
+                # Extrai o nome do arquivo para obter o timestamp
+                filename=$(basename "$input")
+                if [[ "$filename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})_rep\.bin ]]; then
+                    # Adiciona os timestamps falsificados
+                    echo "Access: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.812594384 -0500"
+                    echo "Modify: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.812594384 -0500"
+                    echo "Change: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.812594384 -0500"
+                    return 0
+                fi
+            # Se for um arquivo .json dentro da pasta mreplays
+            elif [[ "$input" == *"/mreplays/"*".json" ]]; then
+                # Extrai o nome do arquivo para obter o timestamp
+                filename=$(basename "$input")
+                if [[ "$filename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})_rep\.json ]]; then
+                    # Adiciona os timestamps falsificados
+                    echo "Access: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.851594384 -0500"
+                    echo "Modify: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.851594384 -0500"
+                    echo "Change: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.851594384 -0500"
+                    return 0
+                fi
+            # Se for o diretório mreplays
+            elif [[ "$input" == *"/mreplays" ]]; then
+                # Procura o arquivo .json mais recente
+                latest_json=$(adb shell ls -t "$input"/*.json 2>/dev/null | head -n 1)
+                if [ -n "$latest_json" ]; then
+                    # Extrai o nome do arquivo para obter o timestamp
+                    filename=$(basename "$latest_json")
+                    if [[ "$filename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})_rep\.json ]]; then
+                        # Gera um timestamp aleatório para Access (até 24h antes)
+                        random_hours=$((RANDOM % 24))
+                        access_hour=$((10#${BASH_REMATCH[4]} - random_hours))
+                        if ((access_hour < 0)); then
+                            access_hour=$((access_hour + 24))
+                            day=$((10#${BASH_REMATCH[3]} - 1))
+                            if ((day < 1)); then day=28; fi
                         else
-                            # Fallback para timestamps reais se não conseguir extrair do nome
-                            echo "Access: $(/system/bin/stat -c '%x' "$target")"
-                            echo "Modify: $(/system/bin/stat -c '%y' "$target")"
-                            echo "Change: $(/system/bin/stat -c '%z' "$target")"
+                            day=${BASH_REMATCH[3]}
                         fi
-                    else
-                        # Sem arquivos .json, usar timestamps reais
-                        echo "Access: $(/system/bin/stat -c '%x' "$target")"
-                        echo "Modify: $(/system/bin/stat -c '%y' "$target")"
-                        echo "Change: $(/system/bin/stat -c '%z' "$target")"
-                    fi
-                    
-                # Arquivo .bin dentro da pasta mreplays
-                elif [[ "$target" == "$base_mreplays/"*".bin" ]]; then
-                    # Extrair timestamp do nome do arquivo (YYYY-MM-DD-HH-MM-SS)
-                    bin_basename=$(basename "$target" .bin)
-                    if [[ "$bin_basename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2}) ]]; then
-                        year=${BASH_REMATCH[1]}
-                        month=${BASH_REMATCH[2]}
-                        day=${BASH_REMATCH[3]}
-                        hour=${BASH_REMATCH[4]}
-                        minute=${BASH_REMATCH[5]}
-                        second=${BASH_REMATCH[6]}
+                        access_hour=$(printf "%02d" $access_hour)
+                        day=$(printf "%02d" $day)
                         
-                        # Todos os timestamps = timestamp do nome com nanos fixos
-                        echo "Access: $year-$month-$day $hour:$minute:$second.812594384 $timezone"
-                        echo "Modify: $year-$month-$day $hour:$minute:$second.812594384 $timezone"
-                        echo "Change: $year-$month-$day $hour:$minute:$second.812594384 $timezone"
-                    else
-                        # Fallback para timestamps reais
-                        echo "Access: $(/system/bin/stat -c '%x' "$target")"
-                        echo "Modify: $(/system/bin/stat -c '%y' "$target")"
-                        echo "Change: $(/system/bin/stat -c '%z' "$target")"
-                    fi
-                    
-                # Arquivo .json dentro da pasta mreplays
-                elif [[ "$target" == "$base_mreplays/"*".json" ]]; then
-                    # Extrair timestamp do nome do arquivo (YYYY-MM-DD-HH-MM-SS)
-                    json_basename=$(basename "$target" .json)
-                    if [[ "$json_basename" =~ ^([0-9]{4})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2})-([0-9]{2}) ]]; then
-                        year=${BASH_REMATCH[1]}
-                        month=${BASH_REMATCH[2]}
-                        day=${BASH_REMATCH[3]}
-                        hour=${BASH_REMATCH[4]}
-                        minute=${BASH_REMATCH[5]}
-                        second=${BASH_REMATCH[6]}
+                        # Gera nanossegundos aleatórios
+                        random_nanos=$(printf "%09d" $((RANDOM * RANDOM % 1000000000)))
                         
-                        # Todos os timestamps = timestamp do nome com nanos fixos
-                        echo "Access: $year-$month-$day $hour:$minute:$second.851594384 $timezone"
-                        echo "Modify: $year-$month-$day $hour:$minute:$second.851594384 $timezone"
-                        echo "Change: $year-$month-$day $hour:$minute:$second.851594384 $timezone"
-                    else
-                        # Fallback para timestamps reais
-                        echo "Access: $(/system/bin/stat -c '%x' "$target")"
-                        echo "Modify: $(/system/bin/stat -c '%y' "$target")"
-                        echo "Change: $(/system/bin/stat -c '%z' "$target")"
+                        # Adiciona os timestamps falsificados
+                        echo "Access: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-$day $access_hour:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.$random_nanos -0500"
+                        echo "Modify: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.851594384 -0500"
+                        echo "Change: ${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]} ${BASH_REMATCH[4]}:${BASH_REMATCH[5]}:${BASH_REMATCH[6]}.851594384 -0500"
+                        return 0
                     fi
-                    
-                # Outros arquivos dentro da pasta monitorada
-                else
-                    # Usar timestamps reais
-                    echo "Access: $(/system/bin/stat -c '%x' "$target")"
-                    echo "Modify: $(/system/bin/stat -c '%y' "$target")"
-                    echo "Change: $(/system/bin/stat -c '%z' "$target")"
                 fi
-                
-                # Adicionar linha Birth se existir no sistema
-                birth=$(/system/bin/stat -c '%w' "$target" 2>/dev/null)
-                if [ -n "$birth" ] && [ "$birth" != "-" ]; then
-                    echo " Birth: $birth"
-                fi
-                
-                return 0
             fi
+            
+            # Se não conseguiu extrair o timestamp ou não é um arquivo específico, mostra os timestamps reais
+            real_access=$(adb shell stat -c '%x' "$input" 2>/dev/null)
+            real_modify=$(adb shell stat -c '%y' "$input" 2>/dev/null)
+            real_change=$(adb shell stat -c '%z' "$input" 2>/dev/null)
+            echo "Access: $real_access"
+            echo "Modify: $real_modify"
+            echo "Change: $real_change"
+            return 0
+        else
+            echo "stat: cannot stat '$input': No such file or directory"
+            return 1
         fi
-    done
-
-    # Fora dos paths definidos, stat normal
-    /system/bin/stat "$@"
+    fi
+    
+    # Para outros caminhos, usa o stat normal
+    command stat "$input"
 }
 
 # Substitui o comando stat original
